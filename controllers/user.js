@@ -7,7 +7,7 @@ exports.homePage=(req,res)=>{
 
 exports.createUser=async (req, res) => {
     const isnewuser= await User.verifyUniqueEmail(req.body.email);
-    if (!isnewuser) return res.json({'success':false,'email':'This email is in use. Try signing in'})
+    if (!isnewuser) return res.json({'success':false,'message':'This email is in use. Try signing in'})
         try {
             const user= new User(req.body);
             const newuser=await user.save();
