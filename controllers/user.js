@@ -28,11 +28,54 @@ exports.userSignIn=async (req,res)=>{
     const isMatch=await user.comparePassword(password);
     if(!isMatch) return res.json({success:false,message:'password does not match'})
 
-    const token=jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:'1d'})
+    const token=jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:'1d'});
+
+    let oldTokens=user.tokens || [];
+    if(oldTokens.length){
+        oldTokens.filter(t=>{
+      const timeDiff=  (Date.now()-parseInt(t.SignedAt))/1000 //Exact time diff in seconds
+      if(timeDiff<86400){
+        //24 hours in seconds is 86400 secs
+        return t; //token isnt expired
+      }
+        })
+    }
+     await User.findByIdAndUpdate(user._id,{
+        tokens:[
+        ...oldTokens,
+        {token,SignedAt:Date.now().toString()}
+        ]
+     });
 
     res.json({success:true,user,token});
 }
 
+exports.Signout=async (req,res)=>{
+    if(req.headers && req.headers.authorization){
+ 
+        const token=req.headers.authorization.split(' ')[1];
+        if(!token){
+            return res.status(401).json({
+                success:false,
+                'message':'Authorization failed'
+            })
+        }
+        const tokens=req.user.tokens;
+        if(!tokens.length){
+           return res.json({success:false,message:"You are not logged in"})
+        }
+        const newTokens=tokens.filter(t=>t.token!==token);
+        await User.findByIdAndUpdate(req.user._id,{
+            tokens:newTokens
+        });
+        return res.json({
+            success:true,
+            'message':'Signed out successfully'
+        });
+        
+    }
+
+}
 
 //private page if user is signed in then can only acces
 exports.privatePage=(req,res)=>{

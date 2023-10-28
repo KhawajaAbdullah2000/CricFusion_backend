@@ -18,7 +18,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  avatar:Buffer
+  avatar:Buffer,
+  tokens:[{type:Object}]
 });
 
 userSchema.pre('save',function(next){
