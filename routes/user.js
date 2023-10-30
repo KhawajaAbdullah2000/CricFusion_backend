@@ -10,7 +10,20 @@ const { isAuth } = require("../middlewares/auth");
 router.get("/", homePage);
 router.post("/create-user", validateUserSignup , userValidations, createUser);
 router.post('/signin',validateUserSignIn,userValidations,userSignIn);
-router.post('/player-logout',isAuth,Signout);
+router.get('/player-logout',isAuth,Signout);
 router.get('/privatePage',isAuth,privatePage)
+router.get('/profile',isAuth,(req,res)=>{
+    if(!req.user){
+        return res.json({sucess:false,message:'Unauthorized Access!'});
+    }
+    res.json({
+        success:true,
+        profile:{
+            first_name:req.user.first_name,
+            last_name:req.user.last_name,
+            email:req.user.email
+        }
+    });
+});
 
 module.exports = router
