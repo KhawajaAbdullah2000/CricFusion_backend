@@ -5,6 +5,7 @@ exports.validateUserSignup=[
     .isLength({min:3,max:50}).withMessage("name must be within 3 to 50 characters"),
     check('last_name').trim().not().isEmpty().isString(),
     check('email').normalizeEmail().isEmail().withMessage('Invalid email').not().isEmpty(),
+    check('city').trim().not().isEmpty().withMessage("City is required").isString(),
     check('password').trim().not().isEmpty().withMessage('Password is required').isLength({min:5,max:30}).withMessage("password must be within 5 to 30 characters"),
     check('confirmPassword').trim().not().isEmpty().custom((value,{req})=>{
        if(value!=req.body.password){

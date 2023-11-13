@@ -82,3 +82,5 @@ exports.privatePage=(req,res)=>{
    res.json({message:"Welcome. you mare logged in "+req.user.first_name+" "+req.user.last_name})
 }
 
+
+

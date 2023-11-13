@@ -19,6 +19,7 @@ router.get('/profile',isAuth,(req,res)=>{
     res.json({
         success:true,
         profile:{
+            user_id:req.user._id,
             first_name:req.user.first_name,
             last_name:req.user.last_name,
             email:req.user.email

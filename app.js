@@ -2,7 +2,7 @@ const express = require("express");
 require("./db/conn");
 const User = require("./models/user");
 const userRouter=require('./routes/user');
-
+const teamRouter=require('./routes/Team')
 
 
 const app = express();
@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 app.use(userRouter);
+app.use(teamRouter);
 
 // const test=async (email,password)=>{
 //   const user=await User.findOne({email:email});
