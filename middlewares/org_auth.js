@@ -1,18 +1,18 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
-exports.isAuth = async (req, res, next) => {
+const Org = require("../models/organization");
+exports.isOrgAuth = async (req, res, next) => {
   if (req.headers && req.headers.authorization) {
     const token = req.headers.authorization.split(" ")[1];
 
 try {
     
     const decode = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decode.userId);
-    if (!user) {
+    const org = await Org.findById(decode.orgId);
+    if (!org) {
       return res.json({ success: false, message: "Unauthorized access" });
     }
 
-        req.user=user;
+        req.org=org;
         next();
     
 } catch (error) {

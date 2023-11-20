@@ -1,0 +1,32 @@
+const {check,validationResult}=require('express-validator')
+
+exports.validateOrgSignup=[
+    check('name').trim().not().isEmpty().withMessage('name is required').isAlpha().withMessage('Name must not contain numbers')
+    .isLength({min:3,max:50}).withMessage("name must be within 3 to 50 characters"),
+    check('email').normalizeEmail().isEmail().withMessage('Invalid email').not().isEmpty(),
+    check('city').trim().not().isEmpty().withMessage("City is required").isString(),
+    check('password').trim().not().isEmpty().withMessage('Password is required').isLength({min:5,max:30}).withMessage("password must be within 5 to 30 characters"),
+    check('confirmPassword').trim().not().isEmpty().custom((value,{req})=>{
+       if(value!=req.body.password){
+        throw new Error('Both passwords must be same')
+       }
+       return true;
+    })
+
+]
+
+exports.orgValidations=(req,res,next)=>{
+    const results=validationResult(req).array();
+   if(!results.length) return next();
+
+   //const error = results.map(res => res.msg); for sending all errors
+
+const error=results[0].msg; //for sending the first error message
+   res.json({'success':false,message:error})
+   
+}
+
+exports.validateOrgSignIn=[
+   check('email').trim().isEmail().withMessage('Invalid email'),
+   check('password').trim().not().isEmpty().withMessage("Email/password is required")
+]
