@@ -17,6 +17,10 @@ const LeagueSchema = new mongoose.Schema({
   num_of_teams:{
     type:Number,
     required:true
+  },
+  city:{
+    type:String,
+    required:true
   }
 
 });

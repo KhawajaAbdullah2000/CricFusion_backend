@@ -50,3 +50,22 @@ exports.myTeams = async (req, res) => {
 
   res.json({ sucess: true, UserId: req.params.user_id, my_teams: my_teams });
 };
+
+
+//Details of a specific team
+exports.my_Team = async (req, res) => {
+ 
+  try {
+
+    const team=await Team.findOne({ _id: req.params.team_id });
+    if(team){
+      res.status(200).json({ success: true, team });
+    }else{
+      res.status(400).json({ success:false,message:"No team found" });
+    }
+
+
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

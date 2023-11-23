@@ -5,7 +5,8 @@ exports.validateCreateLeague=[
     .isLength({min:3,max:50}).withMessage("name must be within 3 to 50 characters"),
     check('org_id').isString().withMessage().not().isEmpty(),
     check('startsAt').not().isEmpty().withMessage('Starting Date is required'),
-    check('num_of_teams').isNumeric().withMessage('only number allowed').not().isEmpty()
+    check('num_of_teams').isNumeric().withMessage('only number allowed').not().isEmpty(),
+    check('city').trim().not().isEmpty().isString()
 
 ]
 
