@@ -18,6 +18,10 @@ const LeagueSchema = new mongoose.Schema({
     type:Number,
     required:true
   },
+  teams_joined: {
+    type: Number,
+    default: 0 // Initialize to 0
+  },
   city:{
     type:String,
     required:true

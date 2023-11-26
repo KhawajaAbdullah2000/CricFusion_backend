@@ -98,10 +98,23 @@ exports.registerTeamInLeague=async(req,res)=>{
    if(existingTeam){
     res.json({success:false,message:"Team already registered"});
    }else{
-     const joinTeam = new TeamsInLeagues(req.body);
-     const newTeamJoined = await joinTeam.save();
 
-    res.status(201).json({ success: true, registeration:newTeamJoined });
+            const checkTeamsRegistered=await League.find({_id:req.body.league_id});
+
+            
+                if (checkTeamsRegistered[0].num_of_teams==checkTeamsRegistered[0].teams_joined){
+                  res.status(200).json({ success: false, teams_full:1,message:"Teams full in this league" });
+
+                }else{
+
+                  const joinTeam = new TeamsInLeagues(req.body);
+                  const newTeamJoined = await joinTeam.save();
+                  await League.findByIdAndUpdate(req.body.league_id, { $inc: { teams_joined: 1 } });
+      
+                  res.status(201).json({ success: true, registeration:newTeamJoined });
+                }
+
+
 
    }
 
