@@ -1,7 +1,8 @@
 const League=require('../models/leagues')
 const Organization=require('../models/organization')
-const mongoose = require("mongoose");
+const LeagueSchedule=require('../models/LeagueSchedule')
 const TeamsInLeagues=require('../models/TeamsInLeagues');
+const mongoose = require("mongoose");
 
 exports.createLeague = async (req, res) => {
     const isnewLeague = await League.verifyUniqueLeague(req.body.name);
@@ -134,4 +135,56 @@ if(check){
   res.json({success:true,message:"Team not Registered",registeration:false});
 
 }
+}
+
+exports.ScheduleMatch=async(req,res)=>{
+  try {
+    const schedule_match = new LeagueSchedule(req.body);
+    const newMatch = await schedule_match.save();
+
+    res.status(201).json({ success: true, newMatch:newMatch});
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+
+}
+
+
+exports.LeagueSchedule=async(req,res)=>{
+  const leagueSchedule = await LeagueSchedule.aggregate([
+    {
+      $lookup: {
+        from: "teams",
+        localField: "team1_id",
+        foreignField: "_id",
+        as: "Team1",
+      },
+    },
+    {
+      $unwind: "$Team1",
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "team2_id",
+        foreignField: "_id",
+        as: "Team2",
+      },
+    },
+    {
+      $unwind: "$Team2",
+    },
+    {
+      $match: { league_id: new mongoose.Types.ObjectId(req.params.league_id) }
+    }
+  ]);
+  
+  
+if(leagueSchedule.length){
+  res.json({success:true,leagueSchedule:leagueSchedule});
+}else{
+  res.json({success:false,message:"No Matches Schedules yet"})
+}
+  
+
 }

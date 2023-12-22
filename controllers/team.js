@@ -2,6 +2,7 @@ const Team = require("../models/teams");
 const User = require("../models/TeamPlayers");
 const jwt = require("jsonwebtoken");
 const TeamPlayers = require("../models/TeamPlayers");
+const TeamsInLeagues=require('../models/TeamsInLeagues');
 const mongoose = require("mongoose");
 
 exports.createTeam = async (req, res) => {
@@ -69,3 +70,34 @@ exports.my_Team = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+//finding teams registered in leaues
+exports.teamsInLeagues=async(req,res)=>{
+  const teams_in_leagues = await TeamsInLeagues.aggregate([
+    {
+      $lookup: {
+        from: "teams",
+        localField: "team_id",
+        foreignField: "_id",
+        as: "teams",
+      },
+    },
+    {
+        $unwind:"$teams"
+    },
+    {
+       $match: { league_id: new mongoose.Types.ObjectId( req.params.league_id) }// Convert user_id to ObjectId
+     },
+  ]);
+  console.log(teams_in_leagues.length);
+
+  if(teams_in_leagues.length){
+     res.json({success:true,teams_in_leagues:teams_in_leagues});
+  }else{
+    res.json({success:false,message:"No team Found"});
+
+  }
+
+
+}
