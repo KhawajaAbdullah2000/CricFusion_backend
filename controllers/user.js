@@ -1,5 +1,7 @@
 const User = require("../models/user");
+const PlayerInLeague=require("../models/PlayerInLeagues");
 const jwt=require('jsonwebtoken');
+const mongoose = require("mongoose");
 
 exports.homePage=(req,res)=>{
     res.json({'success':true,'message':"welcome to home page"})
@@ -19,6 +21,44 @@ exports.createUser=async (req, res) => {
     
     
     }
+
+
+exports.RegisterAsIndividual=async(req,res)=>{
+ 
+        try {
+            const register= new PlayerInLeague(req.body);
+            const newRegister=await register.save();
+            res.status(201).json({success:true,newRegister});
+            
+        } catch (error) {
+            res.status(400).json({ success:false,message: error.message });
+        }
+
+
+}
+
+exports.CheckPlayerReg= async(req,res)=>{
+
+    const check=await PlayerInLeague.findOne(
+        {league_id:new mongoose.Types.ObjectId(req.params.league_id),
+         player_id:new mongoose.Types.ObjectId(req.params.player_id)
+        
+        }
+        );
+
+        if (check){
+            res.status(200).json({success:true,registeration:check});
+
+        }else{
+            res.json({success:false,message:"No registeration found"})
+        }
+
+}
+
+
+
+
+
 
 exports.userSignIn=async (req,res)=>{
     const {email,password}=req.body;
