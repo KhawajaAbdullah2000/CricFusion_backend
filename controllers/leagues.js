@@ -139,6 +139,8 @@ if(check){
 
 exports.ScheduleMatch=async(req,res)=>{
   try {
+
+    console.log(req.body.match_date);
     const schedule_match = new LeagueSchedule(req.body);
     const newMatch = await schedule_match.save();
 
@@ -178,7 +180,9 @@ exports.LeagueSchedule=async(req,res)=>{
       $match: { league_id: new mongoose.Types.ObjectId(req.params.league_id) }
     }
   ]);
-  
+
+
+
   
 if(leagueSchedule.length){
   res.json({success:true,leagueSchedule:leagueSchedule});

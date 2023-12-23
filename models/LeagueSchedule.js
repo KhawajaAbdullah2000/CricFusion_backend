@@ -21,7 +21,7 @@ const LeagueScheduleSchema = new mongoose.Schema({
   },
 
   match_date:{
-    type:Date,
+    type:String,
     required:true
   }
  
