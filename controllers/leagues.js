@@ -2,6 +2,7 @@ const League=require('../models/leagues')
 const Organization=require('../models/organization')
 const LeagueSchedule=require('../models/LeagueSchedule')
 const TeamsInLeagues=require('../models/TeamsInLeagues');
+const PlayerInLeague=require('../models/PlayerInLeagues')
 const mongoose = require("mongoose");
 
 exports.createLeague = async (req, res) => {
@@ -190,5 +191,39 @@ if(leagueSchedule.length){
   res.json({success:false,message:"No Matches Schedules yet"})
 }
   
+
+}
+
+exports.PlayerAuctionList=async(req,res)=>{
+  const PlayersInLeague = await PlayerInLeague.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "player_id",
+        foreignField: "_id",
+        as: "Player",
+      },
+    },
+    {
+        $unwind:"$Player"
+    },
+    {
+       $match: { league_id: new mongoose.Types.ObjectId( req.params.league_id) }// Convert user_id to ObjectId
+     },
+     {
+      $project: {
+          "Player.tokens":0
+         }
+    }
+    
+  ]);
+
+  if(PlayersInLeague.length){
+    res.json({success:true,PlayersInLeague:PlayersInLeague});
+
+  }else{
+    res.json({success:false,message:"No player registered yet"});
+
+  }
 
 }
