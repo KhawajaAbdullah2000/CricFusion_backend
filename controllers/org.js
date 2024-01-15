@@ -45,3 +45,33 @@ exports.createOrg=async (req, res) => {
     
         res.json({success:true,org,token,_id:org._id});
     }
+
+
+    //Org signout
+    exports.Signout=async (req,res)=>{
+        console.log("At org logout");
+        if(req.headers && req.headers.authorization){
+     
+            const token=req.headers.authorization.split(' ')[1];
+            if(!token){
+                return res.status(401).json({
+                    success:false,
+                    'message':'Authorization failed'
+                })
+            }
+            const tokens=req.org.tokens;
+            if(!tokens.length){
+               return res.json({success:false,message:"You are not logged in"})
+            }
+            const newTokens=tokens.filter(t=>t.token!==token);
+            await Org.findByIdAndUpdate(req.org._id,{
+                tokens:newTokens
+            });
+            return res.json({
+                success:true,
+                'message':'Signed out successfully'
+            });
+            
+        }
+    
+    }
