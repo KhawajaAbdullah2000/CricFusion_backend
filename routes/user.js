@@ -18,17 +18,21 @@ router.get("/check-player-reg-in-league/:league_id/:player_id",CheckPlayerReg);
 
 
 router.get('/privatePage',isAuth,privatePage)
+
 router.get('/profile',isAuth,(req,res)=>{
     if(!req.user){
         return res.json({sucess:false,message:'Unauthorized Access!'});
     }
     res.json({
         success:true,
-        profile:{
-            user_id:req.user._id,
+        user:{
+            _id:req.user._id,
             first_name:req.user.first_name,
             last_name:req.user.last_name,
-            email:req.user.email
+            email:req.user.email,
+            city:req.user.city,
+            tokens:req.user.tokens,
+            token: req.latestToken
         }
     });
 });

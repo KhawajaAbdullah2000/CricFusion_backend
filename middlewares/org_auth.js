@@ -11,7 +11,10 @@ try {
     if (!org) {
       return res.json({ success: false, message: "Unauthorized access" });
     }
-
+    let tokens=org.tokens;
+    let latestToken=tokens[tokens.length-1]
+ 
+    req.latestToken=latestToken.token;
         req.org=org;
         next();
     

@@ -12,6 +12,11 @@ try {
       return res.json({ success: false, message: "Unauthorized access" });
     }
 
+    let tokens=user.tokens;
+    let latestToken=tokens[tokens.length-1]
+ 
+    req.latestToken=latestToken.token;
+
         req.user=user;
         next();
     
