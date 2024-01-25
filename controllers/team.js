@@ -52,6 +52,42 @@ exports.myTeams = async (req, res) => {
   res.json({ sucess: true, UserId: req.params.user_id, my_teams: my_teams });
 };
 
+exports.playersInTeam=async(req,res)=>{
+  try {
+
+    const players = await TeamPlayers.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "player_id",
+          foreignField: "_id",
+          as: "player",
+        },
+      },
+      {
+          $unwind:"$player"
+      },
+      {
+         $match: { team_id: new mongoose.Types.ObjectId( req.params.team_id) }// Convert user_id to ObjectId
+       },
+    ]);
+
+
+
+    // const players=await TeamPlayers.find({team_id:req.params.team_id})
+     if(players.length>0){
+       res.status(200).json({ success: true, players });
+     }else{
+       res.status(200).json({ success: true, message:'No player Found' });
+     }
+    
+  } catch (error) {
+    console.log(error.message)
+    res.json({ success: false, message:error.message });
+
+  }
+}
+
 
 //Details of a specific team
 exports.my_Team = async (req, res) => {
