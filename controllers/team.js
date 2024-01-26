@@ -1,8 +1,10 @@
 const Team = require("../models/teams");
 const User = require("../models/TeamPlayers");
+const Players=require("../models/user")
 const jwt = require("jsonwebtoken");
 const TeamPlayers = require("../models/TeamPlayers");
 const TeamsInLeagues=require('../models/TeamsInLeagues');
+const PlayerRequests=require("../models/PlayerRequests")
 const mongoose = require("mongoose");
 
 exports.createTeam = async (req, res) => {
@@ -135,5 +137,133 @@ exports.teamsInLeagues=async(req,res)=>{
 
   }
 
+
+}
+
+//find nearby players by city to send request
+exports.NearbyPlayers=async (req,res)=>{
+  const city=req.params.city;
+  try {
+    const players=await Players.find({city},{tokens:0});
+    if (players.length>0){
+      res.json({success:true,players,city});
+    }else{
+      res.json({success:false,message:'No player found'});
+
+    }
+
+  } catch (error) {
+
+     res.json({success:false,message:error.message});
+
+  }
+
+}
+
+exports.SendRequest=async(req,res)=>{
+  //PlayerRequests
+  try {
+    const player_request = new PlayerRequests(req.body);
+    const playerRequest = await player_request.save();
+
+    res.status(201).json({ success: true, playerRequest });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+exports.getRequestsSent=async(req,res)=>{
+try {
+  const playerRequests = await PlayerRequests.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "request_to_id",
+        foreignField: "_id",
+        as: "RequestTo",
+      },
+    },
+    {
+      $unwind: "$RequestTo",
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "team_id",
+        foreignField: "_id",
+        as: "Team",
+      },
+    },
+    {
+      $unwind: "$Team",
+    },
+    {
+      $match: { requestor_id: new mongoose.Types.ObjectId(req.params.id) }
+    }
+  ]);
+
+  if (playerRequests.length>0){
+    res.json({success:true,playerRequests})
+  }else{
+    res.json({success:false,message:'No request sent by you'})
+
+  }
+
+
+} catch (error) {
+
+      res.json({success:false,message:error.message})
+
+}
+}
+
+exports.getRequestsSentToMe=async(req,res)=>{
+  try {
+    const Requests = await PlayerRequests.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "requestor_id",
+          foreignField: "_id",
+          as: "Requestor",
+        },
+      },
+      {
+        $unwind: "$Requestor",
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "team_id",
+          foreignField: "_id",
+          as: "Team",
+        },
+      },
+      {
+        $unwind: "$Team",
+      },
+      {
+        $match: { request_to_id: new mongoose.Types.ObjectId(req.params.id) }
+      },
+      {
+        $project: {
+          "Requestor.tokens": 0 //hide token columns
+        }
+      }
+    ]);
+  
+    if (Requests.length>0){
+      res.json({success:true,Requests})
+    }else{
+      res.json({success:false,message:'No request sent by you'})
+  
+    }
+  
+  
+  } catch (error) {
+  
+        res.json({success:false,message:error.message})
+  
+  }
 
 }

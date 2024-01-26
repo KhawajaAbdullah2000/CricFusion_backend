@@ -3,7 +3,8 @@ const express = require("express");
 const router=express.Router();
 
 const {validateCreateTeam,TeamValidations}=require('../middlewares/validation/team')
-const {createTeam,myTeams,my_Team,teamsInLeagues,playersInTeam}=require('../controllers/team');
+const {createTeam,myTeams,my_Team,teamsInLeagues,playersInTeam,NearbyPlayers,
+    SendRequest,getRequestsSent,getRequestsSentToMe}=require('../controllers/team');
 
 const { isAuth } = require("../middlewares/auth");
 
@@ -15,5 +16,13 @@ const { isAuth } = require("../middlewares/auth");
 router.get("/teams-in-leagues/:league_id",teamsInLeagues)
 
 router.get("/players-in-team/:team_id",playersInTeam)
+
+router.get("/nearby-players/:city",NearbyPlayers)
+
+router.post("/send-request",SendRequest)
+
+router.get("/requests-sent-by-me/:id",getRequestsSent)
+
+router.get("/requests-sent-to-me/:id",getRequestsSentToMe)
 
 module.exports=router
