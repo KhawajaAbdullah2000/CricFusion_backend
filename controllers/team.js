@@ -7,6 +7,8 @@ const TeamsInLeagues=require('../models/TeamsInLeagues');
 const PlayerRequests=require("../models/PlayerRequests")
 const mongoose = require("mongoose");
 
+
+
 exports.createTeam = async (req, res) => {
   const isnewTeam = await Team.verifyUniqueTeam(req.body.name);
   if (!isnewTeam)
@@ -243,8 +245,12 @@ exports.getRequestsSentToMe=async(req,res)=>{
         $unwind: "$Team",
       },
       {
-        $match: { request_to_id: new mongoose.Types.ObjectId(req.params.id) }
+        $match: { 
+          request_to_id: new mongoose.Types.ObjectId(req.params.id),
+          status: "pending" // Add the condition for status
+        }
       },
+  
       {
         $project: {
           "Requestor.tokens": 0 //hide token columns
@@ -255,7 +261,7 @@ exports.getRequestsSentToMe=async(req,res)=>{
     if (Requests.length>0){
       res.json({success:true,Requests})
     }else{
-      res.json({success:false,message:'No request sent by you'})
+      res.json({success:false,message:'No request sent to you'})
   
     }
   
@@ -265,5 +271,44 @@ exports.getRequestsSentToMe=async(req,res)=>{
         res.json({success:false,message:error.message})
   
   }
+
+}
+
+exports.AcceptRequest=async(req,res)=>{
+  try {
+    const add_player = new TeamPlayers({
+      team_id:req.body.team_id,
+      player_id:req.body.player_id
+    });
+    const newplayer = await add_player.save();
+
+    console.log(newplayer);
+
+const filter = { _id: req.body._id};
+const update = { status: "Accepted" };
+
+// `doc` is the document _after_ `update` was applied because of
+// `new: true`
+const player_request = await PlayerRequests.findOneAndUpdate(filter, update, {
+  new: true
+});
+console.log("Player Request status updated: ",player_request);
+
+    res.json({success:true,newplayer})
+  } catch (error) {
+    res.json({success:false,message:error.message})
+
+  }
+
+}
+
+exports.RejectRequest=async(req,res)=>{
+try {
+  const delete_req=await PlayerRequests.deleteOne({_id:new mongoose.Types.ObjectId(req.params.id)})
+  res.json({success:true,message:"Request deleted"});
+  
+} catch (error) {
+  res.json({success:true,message:error.message})
+}
 
 }
