@@ -4,12 +4,7 @@ const PlayerInLeagues=require("../models/PlayerInLeagues")
 
 exports.FindPlayer=async(req,res)=>{
 try {
-    // const player=await User.findOne({_id:new mongoose.Types.ObjectId(req.params.id)},{password:0,tokens:0})
-    // if (player){
-    //     res.json({success:true,player})
-    // }else{
-    //     res.json({success:false,message:"No player found"})
-    // }
+   
     const player = await PlayerInLeagues.aggregate([
         {
             $lookup: {
@@ -56,4 +51,27 @@ try {
 } catch (error) {
     res.json({success:false,message:error.message})
 }
+}
+
+exports.SubmitBid=async(req,res)=>{
+  try {
+   const filter = { 
+    player_id:new mongoose.Types.ObjectId(req.params.id),
+    league_id:new mongoose.Types.ObjectId(req.params.league_id)
+  };
+
+const update = { 
+  current_bid: req.params.bid,
+  bidding_team:new mongoose.Types.ObjectId(req.params.team_id)
+ };
+
+
+
+ let submit_bid=await PlayerInLeagues.findOneAndUpdate(filter, update);
+
+ res.json({success:true,submit_bid})
+    
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
 }
