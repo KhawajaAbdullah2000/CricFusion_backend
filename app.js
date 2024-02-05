@@ -5,7 +5,7 @@ const userRouter=require('./routes/user');
 const teamRouter=require('./routes/Team');
 const orgRouter=require('./routes/Organization');
 const leagueRouter=require('./routes/Leagues');
-
+const biddingRouter=require("./routes/Bidding")
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,6 +16,7 @@ app.use(userRouter);
 app.use(teamRouter);
 app.use(orgRouter);
 app.use(leagueRouter);
+app.use(biddingRouter);
 // const test=async (email,password)=>{
 //   const user=await User.findOne({email:email});
 //   const result= await user.comparePassword(password);

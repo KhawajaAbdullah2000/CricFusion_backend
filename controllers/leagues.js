@@ -208,7 +208,10 @@ exports.PlayerAuctionList=async(req,res)=>{
         $unwind:"$Player"
     },
     {
-       $match: { league_id: new mongoose.Types.ObjectId( req.params.league_id) }// Convert user_id to ObjectId
+       $match: { 
+        league_id: new mongoose.Types.ObjectId( req.params.league_id),
+        status:0
+      }// Convert user_id to ObjectId
      },
      {
       $project: {
