@@ -23,6 +23,10 @@ const LeagueScheduleSchema = new mongoose.Schema({
   match_date:{
     type:String,
     required:true
+  },
+  match_status:{
+    type:Number,
+    default:0
   }
  
 

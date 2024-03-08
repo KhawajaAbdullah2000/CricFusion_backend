@@ -7,6 +7,8 @@ const {validateLeagueSchedule,LeagueScheduleValidations}=require('../middlewares
 const {createLeague,orgLeagues,nearbyLeagues,LeagueDetails,registerTeamInLeague,
     checkTeamRegisteration,ScheduleMatch,LeagueSchedule,PlayerAuctionList}=require('../controllers/leagues');
 
+    const {PlayingEleven}=require("../controllers/live_scoring")
+
 
  router.post("/create-league", validateCreateLeague , LeagueValidations, createLeague);
  router.get("/org-leagues/:org_id",orgLeagues);
@@ -18,4 +20,7 @@ router.get("/check-reg-in-league/:league_id/:team_id",checkTeamRegisteration);
 router.post('/schedule-match',validateLeagueSchedule,LeagueScheduleValidations,ScheduleMatch)
 router.get('/league-schedule/:league_id',LeagueSchedule);
 router.get('/player-list-for-auction/:league_id',PlayerAuctionList);
+
+//live scoring
+router.get("/playing_eleven/:match_id",PlayingEleven)
 module.exports=router
