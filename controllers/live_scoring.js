@@ -111,3 +111,60 @@ const TeamPlayers=require('../models/TeamPlayers')
 
     //res.json({success:true,"msg":"Success hehe"+req.params.match_id})
  }
+
+ exports.UpdateMatchDetails=async(req,res)=>{
+
+  try {
+    console.log(req.body);
+    const filter = { _id: new mongoose.Types.ObjectId( req.body.match_id) };
+    const update = { 
+      overs: req.body.overs,
+      overs_per_bowler:req.body.overs_per_bowler,
+      ball_type:req.body.ball_type,
+      pitch_type:req.body.pitch_type
+    };
+    
+    const updateMatch=await LeagueSchedule.findOneAndUpdate(filter, update);
+
+    res.json({success:true,message:'Match details updated'});
+    
+  } catch (error) {
+    res.json({success:false,message:error.message});
+  }
+ 
+
+
+ }
+
+ exports.UpdatePlayingEleven=async(req,res)=>{
+  try {
+    console.log(req.body);
+    const filter = { _id: new mongoose.Types.ObjectId( req.body.match_id) };
+    const update = { 
+      team1_playing_eleven: req.body.team1_playing_eleven,
+      team2_playing_eleven:req.body.team2_playing_eleven
+    };
+    
+    const updateMatch=await LeagueSchedule.findOneAndUpdate(filter, update);
+
+    res.json({success:true,message:'Playing XIs updated'});
+    
+  } catch (error) {
+    res.json({success:false,message:error.message});
+  }
+ 
+}
+
+exports.GetPlayingEleven=async(req,res)=>{
+try {
+  const result=await LeagueSchedule.findOne({_id:new mongoose.Types.ObjectId(req.params.match_id)});
+  if(res){
+    res.json({success:true,match_details:result});
+  }
+
+} catch (error) {
+  res.json({success:false,message:error.message});
+
+  console.log(error.message)
+}
+}

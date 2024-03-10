@@ -7,7 +7,7 @@ const {validateLeagueSchedule,LeagueScheduleValidations}=require('../middlewares
 const {createLeague,orgLeagues,nearbyLeagues,LeagueDetails,registerTeamInLeague,
     checkTeamRegisteration,ScheduleMatch,LeagueSchedule,PlayerAuctionList}=require('../controllers/leagues');
 
-    const {PlayingEleven}=require("../controllers/live_scoring")
+ const {PlayingEleven,UpdateMatchDetails,UpdatePlayingEleven,GetPlayingEleven}=require("../controllers/live_scoring")
 
 
  router.post("/create-league", validateCreateLeague , LeagueValidations, createLeague);
@@ -23,4 +23,7 @@ router.get('/player-list-for-auction/:league_id',PlayerAuctionList);
 
 //live scoring
 router.get("/playing_eleven/:match_id",PlayingEleven)
+router.put("/update_playing_eleven",UpdatePlayingEleven)
+router.put("/update_match_details",UpdateMatchDetails)
+router.get("/get_playing_elevens/:match_id",GetPlayingEleven);
 module.exports=router

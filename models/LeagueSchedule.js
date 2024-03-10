@@ -27,7 +27,35 @@ const LeagueScheduleSchema = new mongoose.Schema({
   match_status:{
     type:Number,
     default:0
+  },
+  team1_playing_eleven: {
+  type:Array,
+  default:[]
+    },
+  team2_playing_eleven: {
+    type:Array,
+    default:[]
+        },
+    
+
+
+  overs:{
+    type:Number,
+    default:0
+  },
+  overs_per_bowler:{
+    type:Number,
+    default:0
+  },
+  ball_type:{
+    type:String,
+    default:"hard"
+  },
+  pitch_type:{
+    type:String,
+    default:'rough'
   }
+
  
 
 
