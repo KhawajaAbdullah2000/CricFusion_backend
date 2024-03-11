@@ -168,3 +168,110 @@ try {
   console.log(error.message)
 }
 }
+
+exports.TeamPlayingEleven = async (req, res) => {
+  try {
+
+    const team1=await LeagueSchedule.findOne({team1_id:new mongoose.Types.ObjectId(req.params.team_id)})
+    if (team1){
+       const team1_players = await LeagueSchedule.aggregate([
+     {
+        $match: { 
+          _id: new mongoose.Types.ObjectId(req.params.match_id),
+      }
+       },
+      {
+        $project: {
+          team1_playing_eleven: {
+            $map: {
+            input: "$team1_playing_eleven",
+              as: "playerId",
+              in: { $toObjectId: "$$playerId" } // Convert string IDs to ObjectIDs
+            }
+          }
+         }
+       },
+       {
+        $lookup: {
+           from: 'users',
+          localField: 'team1_playing_eleven',
+          foreignField: '_id',
+           as: 'players'
+         }
+       },
+       {
+        $unwind: "$players"
+      },
+      {
+         $project: {
+           "_id": "$players._id",
+          "first_name": "$players.first_name",
+           "last_name": "$players.last_name"
+        }
+       }
+     ]);
+
+ if(team1_players && team1_players.length>0){
+  res.json({success:true,team_players:team1_players})
+ }
+ else{
+  res.json({ success: false, message: "No players found" });
+ }
+     
+      
+    }
+
+    const team2=await LeagueSchedule.findOne({team2_id:new mongoose.Types.ObjectId(req.params.team_id)})
+    if (team2){
+     const team2_players = await LeagueSchedule.aggregate([
+      {
+        $match: { 
+          _id: new mongoose.Types.ObjectId(req.params.match_id),
+        }
+      },
+      {
+         $project: {
+           team2_playing_eleven: {
+             $map: {
+               input: "$team2_playing_eleven",
+              as: "playerId",
+              in: { $toObjectId: "$$playerId" } // Convert string IDs to ObjectIDs
+            }
+          }
+        }
+       },
+       {
+        $lookup: {
+           from: 'users',
+           localField: 'team2_playing_eleven',
+           foreignField: '_id',
+           as: 'players'
+         }
+       },
+       {
+      $unwind: "$players"
+       },
+       {
+        $project: {
+           "_id": "$players._id",
+          "first_name": "$players.first_name",
+          "last_name": "$players.last_name"
+        }
+       }
+     ]);
+
+     if ( team2_players && team2_players.length>0) {
+      res.json({ success: true,team_players:team2_players });
+    } 
+   else {
+      res.json({ success: false, message: "No players found" });
+    }
+    }
+
+
+  
+
+  } catch (error) {
+    res.json({ success: false, msg: "In backend try catch" + error.message });
+  }
+}
