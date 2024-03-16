@@ -1,11 +1,9 @@
 const mongoose = require("mongoose");
-const League=require('../models/leagues')
-const Organization=require('../models/organization')
+
 const LeagueSchedule=require('../models/LeagueSchedule')
-//const TeamsInLeagues=require('../models/TeamsInLeagues');
+const ScoreCard=require('../models/ScoreCard')
 const Teams=require('../models/teams')
 const TeamPlayers=require('../models/TeamPlayers')
-//const PlayerInLeague=require('../models/PlayerInLeagues')
 
  exports.PlayingEleven=async(req,res)=>{
 
@@ -115,7 +113,7 @@ const TeamPlayers=require('../models/TeamPlayers')
  exports.UpdateMatchDetails=async(req,res)=>{
 
   try {
-    console.log(req.body);
+    //console.log(req.body);
     const filter = { _id: new mongoose.Types.ObjectId( req.body.match_id) };
     const update = { 
       overs: req.body.overs,
@@ -172,7 +170,10 @@ try {
 exports.TeamPlayingEleven = async (req, res) => {
   try {
 
+   console.log(req.params.team_id);
+
     const team1=await LeagueSchedule.findOne({team1_id:new mongoose.Types.ObjectId(req.params.team_id)})
+   // console.log("team1 is: " +team1);
     if (team1){
        const team1_players = await LeagueSchedule.aggregate([
      {
@@ -222,6 +223,7 @@ exports.TeamPlayingEleven = async (req, res) => {
     }
 
     const team2=await LeagueSchedule.findOne({team2_id:new mongoose.Types.ObjectId(req.params.team_id)})
+  //  console.log("team2 is: " +team2);
     if (team2){
      const team2_players = await LeagueSchedule.aggregate([
       {
@@ -274,4 +276,80 @@ exports.TeamPlayingEleven = async (req, res) => {
   } catch (error) {
     res.json({ success: false, msg: "In backend try catch" + error.message });
   }
+}
+
+exports.InsertBallData=async(req,res)=>{
+//   const { player_id, match_id, runs_scored, fours_count, sixers_count, dismissal,fifty_scored,century_scored } = req.body;
+//   console.log(req.body)
+//   try {
+//  const ballDataforBatsman = await ScoreCard.findOneAndUpdate(
+//   { player_id, match_id },  { $inc: { runs_scored, fours_count, sixers_count }, $set: { dismissal,fifty_scored,century_scored } },  
+//   { upsert: true, new: true }
+//  );
+
+
+//     res.json({success:true,ballDataforBatsman})
+   
+//   } catch (error) {
+//     res.json({success:false,message:error.message})
+   
+//   }
+
+//for 1st batsman
+const { match_id } = req.body; // Assuming match_id is common for all players in the array
+
+const ballDataArray = req.body.data;
+
+console.log(ballDataArray);
+
+try {
+  for (const ballData of ballDataArray) {
+    const { player_id, team_id, runs_scored, fours_count, sixers_count, dismissal, fifty_scored, century_scored } = ballData;
+    
+    // Find the scorecard for the specific player in the specific match
+    const scorecard = await ScoreCard.findOneAndUpdate(
+      { player_id, match_id },
+      { $inc: { runs_scored, fours_count, sixers_count }, $set: { dismissal, fifty_scored, century_scored,team_id } },
+      { upsert: true, new: true }
+    );
+  }
+
+
+
+
+
+  res.json({ success: true, message: "Scorecard updated successfully" });
+} catch (error) {
+  res.json({ success: false, message: error.message });
+}
+
+
+
+}
+
+exports.InsertBallerData=async(req,res)=>{
+  const { match_id } = req.body; // Assuming match_id is common for all players in the array
+
+const ballDataArray = req.body.data;
+
+console.log(ballDataArray);
+
+try {
+  for (const ballData of ballDataArray) {
+    const { player_id, team_id, overs_bowled,wickets_taken,runs_conceded} = ballData;
+    
+    // Find the scorecard for the specific player in the specific match
+    const scorecard = await ScoreCard.findOneAndUpdate(
+      { player_id, match_id },
+      { $inc: { overs_bowled, wickets_taken, runs_conceded },$set:{team_id} },
+      { upsert: true, new: true }
+    );
+  }
+
+
+  res.json({ success: true, message: "Scorecard updated successfully for bowler" });
+} catch (error) {
+  res.json({ success: false, message: error.message });
+}
+
 }

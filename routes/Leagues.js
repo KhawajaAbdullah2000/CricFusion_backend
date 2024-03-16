@@ -8,7 +8,7 @@ const {createLeague,orgLeagues,nearbyLeagues,LeagueDetails,registerTeamInLeague,
     checkTeamRegisteration,ScheduleMatch,LeagueSchedule,PlayerAuctionList}=require('../controllers/leagues');
 
  const {PlayingEleven,UpdateMatchDetails,UpdatePlayingEleven,GetPlayingEleven,
-    TeamPlayingEleven}=require("../controllers/live_scoring")
+    TeamPlayingEleven,InsertBallData,InsertBallerData}=require("../controllers/live_scoring")
 
 
  router.post("/create-league", validateCreateLeague , LeagueValidations, createLeague);
@@ -28,4 +28,6 @@ router.put("/update_playing_eleven",UpdatePlayingEleven)
 router.put("/update_match_details",UpdateMatchDetails)
 router.get("/get_playing_elevens/:match_id",GetPlayingEleven);
 router.get("/players_batting_team/:match_id/:team_id",TeamPlayingEleven)
+router.post("/insert_ball_data",InsertBallData); //for batsman
+router.post("/insert_baller_data",InsertBallerData); //for bowler
 module.exports=router

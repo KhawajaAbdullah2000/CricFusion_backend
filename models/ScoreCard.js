@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const ScoreCardSchema = new mongoose.Schema({
   match_id: {
     type: mongoose.Schema.ObjectId,
@@ -11,6 +10,11 @@ const ScoreCardSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     required: true,
   },
+  team_id: {
+    type: mongoose.Schema.ObjectId,
+    required: true,
+  },
+
   runs_scored:{
     type:Number, //saingle double etc
     default:0
@@ -19,34 +23,42 @@ const ScoreCardSchema = new mongoose.Schema({
     type:Number,
     default:0
   },
+
   sixers_count:{
     type:Number, //saingle double etc
     default:0
   },
+  
+   fifty_scored:{
+      type:Number,
+      default:0
+    },
+    century_scored:{
+      type:Number,
+      default:0
+    }
+  ,
+
+
   dismissal:{
-    type:Number,
+    type:Boolean,
     default:0
   },
+
   overs_bowled:{
     type:Number,
     default:0
   },
   wickets_taken:{
-type:Number,
-default:0
+   type:Number,
+   default:0
   },
-  runs_given:{
+  runs_conceded:{
     type:Number,
     default:0
   }
 
 
-
-  
-
-
-
- 
 
 
 });
