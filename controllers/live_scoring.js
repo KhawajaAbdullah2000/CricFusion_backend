@@ -316,8 +316,6 @@ try {
 
 
 
-
-
   res.json({ success: true, message: "Scorecard updated successfully" });
 } catch (error) {
   res.json({ success: false, message: error.message });
@@ -351,5 +349,19 @@ try {
 } catch (error) {
   res.json({ success: false, message: error.message });
 }
+
+}
+
+exports.UpdateWinningTeam=async(req,res)=>{
+
+  try {
+    const result = await LeagueSchedule.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId( req.body.match_id) },
+      { winning_team: new mongoose.Types.ObjectId( req.body.team_id) }
+    );
+    res.json({success:true,message:"Winning team updated"})
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
 
 }

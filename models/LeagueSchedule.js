@@ -54,6 +54,10 @@ const LeagueScheduleSchema = new mongoose.Schema({
   pitch_type:{
     type:String,
     default:'rough'
+  },
+  winning_team:{
+    type: mongoose.Schema.ObjectId,
+    default:null
   }
 
  
