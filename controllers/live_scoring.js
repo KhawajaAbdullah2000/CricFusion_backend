@@ -279,21 +279,7 @@ exports.TeamPlayingEleven = async (req, res) => {
 }
 
 exports.InsertBallData=async(req,res)=>{
-//   const { player_id, match_id, runs_scored, fours_count, sixers_count, dismissal,fifty_scored,century_scored } = req.body;
-//   console.log(req.body)
-//   try {
-//  const ballDataforBatsman = await ScoreCard.findOneAndUpdate(
-//   { player_id, match_id },  { $inc: { runs_scored, fours_count, sixers_count }, $set: { dismissal,fifty_scored,century_scored } },  
-//   { upsert: true, new: true }
-//  );
 
-
-//     res.json({success:true,ballDataforBatsman})
-   
-//   } catch (error) {
-//     res.json({success:false,message:error.message})
-   
-//   }
 
 //for 1st batsman
 const { match_id } = req.body; // Assuming match_id is common for all players in the array
@@ -304,12 +290,12 @@ console.log(ballDataArray);
 
 try {
   for (const ballData of ballDataArray) {
-    const { player_id, team_id, runs_scored, fours_count, sixers_count, dismissal, fifty_scored, century_scored } = ballData;
+    const { player_id, team_id, runs_scored, balls_faced, fours_count, sixers_count, dismissal, fifty_scored, century_scored } = ballData;
     
     // Find the scorecard for the specific player in the specific match
     const scorecard = await ScoreCard.findOneAndUpdate(
       { player_id, match_id },
-      { $inc: { runs_scored, fours_count, sixers_count }, $set: { dismissal, fifty_scored, century_scored,team_id } },
+      { $inc: { runs_scored, fours_count, sixers_count,balls_faced,dismissal }, $set: { fifty_scored, century_scored,team_id } },
       { upsert: true, new: true }
     );
   }
@@ -357,7 +343,10 @@ exports.UpdateWinningTeam=async(req,res)=>{
   try {
     const result = await LeagueSchedule.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId( req.body.match_id) },
-      { winning_team: new mongoose.Types.ObjectId( req.body.team_id) }
+      { 
+        winning_team: new mongoose.Types.ObjectId( req.body.team_id),
+        match_status:2
+      }
     );
     res.json({success:true,message:"Winning team updated"})
   } catch (error) {

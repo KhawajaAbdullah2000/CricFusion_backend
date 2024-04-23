@@ -15,6 +15,10 @@ const ScoreCardSchema = new mongoose.Schema({
     required: true,
   },
 
+  balls_faced:{
+    type:Number,
+    default:0
+  },
   runs_scored:{
     type:Number, //saingle double etc
     default:0
@@ -41,7 +45,7 @@ const ScoreCardSchema = new mongoose.Schema({
 
 
   dismissal:{
-    type:Boolean,
+    type:Number,
     default:0
   },
 
