@@ -262,12 +262,12 @@ exports.UserStats=async(req,res)=>{
                     $let: {
                         vars: {
                             average_score: { $multiply: [40, { $divide: ["$batting_average", 10] }] },
-                            strike_rate_score: { $multiply: [30, { $divide: ["$batting_strike_rate", 20] }] },
+                            strike_rate_score: { $multiply: [30, { $divide: ["$batting_strike_rate", 10] }] },
                             milestone_score: { $add: [
-                                { $multiply: [10, { $divide: ["$total_centuries", 1] }] },
-                                { $multiply: [10, { $divide: ["$total_fifties", 1] }] }
+                                { $multiply: [10, { $divide: ["$total_centuries", 0] }] },
+                                { $multiply: [10, { $divide: ["$total_fifties", 0] }] }
                             ] },
-                            matches_score: { $multiply: [10, { $divide: [matches_played, 5] }] }
+                            matches_score: { $multiply: [10, { $divide: [matches_played, 2] }] }
                         },
                         in: { $sum: ["$$average_score", "$$strike_rate_score", "$$milestone_score", "$$matches_score"] }
                     }
@@ -277,8 +277,8 @@ exports.UserStats=async(req,res)=>{
                         vars: {
                             average_score: { $multiply: [40, { $divide: [100, "$bowling_average"] }] }, // Lower average is better
                             economy_score: { $multiply: [30, { $divide: [15, "$bowling_economy_rate"] }] }, // Lower economy is better
-                            matches_score: { $multiply: [10, { $divide: ["$total_matches_played", 8] }] },
-                            wickets_score: { $multiply: [20, { $divide: ["$total_wickets_taken", 5] }] }
+                            matches_score: { $multiply: [10, { $divide: ["$total_matches_played", 2] }] },
+                            wickets_score: { $multiply: [20, { $divide: ["$total_wickets_taken", 3] }] }
                         },
                         in: { $sum: ["$$average_score", "$$economy_score", "$$matches_score", "$$wickets_score"] }
                     }
