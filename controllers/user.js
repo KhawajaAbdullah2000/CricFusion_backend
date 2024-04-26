@@ -260,14 +260,15 @@ exports.UserStats=async(req,res)=>{
                 total_wickets_taken: 1,
                 total_runs_conceded: 1,
                 dismissals:1,
+                total_balls_faced:1,
                 batting_rating: {
                     $let: {
                         vars: {
                             average_score: { $multiply: [40, { $divide: ["$batting_average", 10] }] },
                             strike_rate_score: { $multiply: [30, { $divide: ["$batting_strike_rate", 10] }] },
                             milestone_score: { $add: [
-                                { $multiply: [5, { $divide: ["$total_fours_count", 10] }] },
-                                { $multiply: [5, { $divide: ["$total_sixers_count", 5] }] }
+                                { $multiply: [10, { $divide: ["$total_fours_count", 10] }] },
+                                { $multiply: [10, { $divide: ["$total_sixers_count", 5] }] }
                             ] },
                             matches_score: { $multiply: [10, { $divide: [matches_played, 2] }] }
                         },
@@ -294,17 +295,11 @@ exports.UserStats=async(req,res)=>{
                 p.batting_rating =Math.floor( Math.min( p.batting_rating, 100));
                 p.bowling_rating =Math.floor( Math.min(p.bowling_rating,100));
 
-                
+
                });
 
        
-          
-        //   //Normalize ratings to a scale of 0 to 100
-        //   performance.forEach(p => {
-        //     p.batting_rating = Math.min(Math.max(p.batting_rating * 100, 0), 100);
-        //     p.bowling_rating = Math.min(Math.max(p.bowling_rating * 100, 0), 100);
-        //   });
-          
+        
           
       
     
