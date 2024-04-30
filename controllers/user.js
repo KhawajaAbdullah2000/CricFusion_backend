@@ -138,61 +138,7 @@ exports.UserStats=async(req,res)=>{
 
         // Aggregate performance data
 
-        // const performance = await ScoreCard.aggregate([
-        //     { $match: { player_id: new mongoose.Types.ObjectId(userId) } },
-        //     { $group: {
-        //         _id: "$player_id",
-        //         total_balls_bowled: { $sum: "$overs_bowled" },
-        //         total_runs_scored: { $sum: "$runs_scored" },
-        //         total_fours_count: { $sum: "$fours_count" },
-        //         total_sixers_count: { $sum: "$sixers_count" },
-        //         total_fifty_scored: { $sum: "$fifty_scored" },
-        //         total_century_scored: { $sum: "$century_scored" },
-        //         total_wickets_taken: { $sum: "$wickets_taken" },
-        //         total_runs_conceded: { $sum: "$runs_conceded" }
-        //     }},
-        //     { $project: {
-        //         total_overs_bowled: { 
-        //             $concat: [
-        //                 { $toString: { $floor: { $divide: ["$total_balls_bowled", 6] } } },
-        //                 ".",
-        //                 { $toString: { $mod: ["$total_balls_bowled", 6] } }
-        //             ]
-        //         },
-        //         total_balls_bowled: 1,  // Including the sum of balls bowled
-        //         total_runs_scored: 1,   // Include all summed metrics for display
-        //         total_fours_count: 1,
-        //         total_sixers_count: 1,
-        //         total_fifty_scored: 1,
-        //         total_century_scored: 1,
-        //         total_wickets_taken: 1,
-        //         total_runs_conceded: 1,
-        //         batting_rating: {
-        //             $divide: [
-        //                 { $add: [
-        //                     "$total_runs_scored",
-        //                     { $multiply: ["$total_fours_count", 4] },
-        //                     { $multiply: ["$total_sixers_count", 6] },
-        //                     { $multiply: ["$total_fifty_scored", 10] },
-        //                     { $multiply: ["$total_century_scored", 20] }
-        //                 ]},
-        //                 200 // Adjust as needed
-        //             ]
-        //         },
-        //         bowling_rating: {
-        //             $divide: [
-        //                 { $subtract: [
-        //                     { $add: [
-        //                         { $multiply: ["$total_wickets_taken", 10] },
-        //                         "$total_overs_bowled"
-        //                     ]},
-        //                     { $divide: ["$total_runs_conceded", 2] }
-        //                 ]},
-        //                 10 // Adjust as needed
-        //             ]
-        //         }
-        //     }}
-        //   ]);
+     
         const performance = await ScoreCard.aggregate([
             { $match: { player_id: new mongoose.Types.ObjectId(userId) } },
             { $group: {
@@ -305,10 +251,12 @@ exports.UserStats=async(req,res)=>{
     
         // Prepare response data
         const responseData = {
+            success:true,
           first_name: user.first_name,
           last_name: user.last_name,
-          performance: performance.length > 0 ? performance[0] : {}
+          performance: performance.length > 0 ? performance[0] : "No record"
         };
+
     
         res.json(responseData);
       } catch (error) {
