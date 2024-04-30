@@ -3,7 +3,8 @@ const express = require("express");
 const router=express.Router();
 const {validateUserSignup,userValidations,validateUserSignIn}=require('../middlewares/validation/user' )
 
-const {createUser,homePage,userSignIn,privatePage,Signout,RegisterAsIndividual,CheckPlayerReg,UserStats,NearBy}=require('../controllers/user');
+const {createUser,homePage,userSignIn,privatePage,Signout,RegisterAsIndividual,CheckPlayerReg,UserStats,NearBy,
+    UpdateLocation,UpdateStatus}=require('../controllers/user');
 const { isAuth } = require("../middlewares/auth");
 
 
@@ -16,6 +17,8 @@ router.get("/check-player-reg-in-league/:league_id/:player_id",CheckPlayerReg);
 
 router.get("/user_stats/:id",UserStats)
 router.get("/getNearBy/:id",NearBy)
+router.put('/update_location/:id',UpdateLocation)
+router.put('/update_status/:id',UpdateStatus)
 
 router.get('/privatePage',isAuth,privatePage)
 
