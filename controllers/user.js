@@ -2,7 +2,8 @@ const User = require("../models/user");
 const PlayerInLeague=require("../models/PlayerInLeagues");
 const jwt=require('jsonwebtoken');
 const mongoose = require("mongoose");
-const ScoreCard=require('../models/ScoreCard')
+const ScoreCard=require('../models/ScoreCard');
+const axios = require('axios');
 
 exports.homePage=(req,res)=>{
     res.json({'success':true,'message':"welcome to home page"})
@@ -121,8 +122,11 @@ exports.privatePage=(req,res)=>{
 }
 
 
+  
+
 
 exports.UserStats=async(req,res)=>{
+
     try {
         const userId = req.params.id;
         
@@ -263,4 +267,78 @@ exports.UserStats=async(req,res)=>{
         console.error("Server Error", error.message);
         res.status(500).send('Server error');
       }
+}
+async function calculateTravelTime(requesting, player  ) {
+    const apiKey = process.env.API_key;
+    const origin = `${requesting.latitude},${requesting.longitude}`;
+    const destination = `${player.latitude},${player.longitude}`;
+    console.log(origin);
+    console.log(destination);
+    const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
+  
+    try {
+      const response = await axios.get(apiUrl);
+      console.log(response.data.rows[0]);
+      const travelTime = response.data.rows[0].elements[0].duration.text;
+      return travelTime;
+    } catch (error) {
+      console.error('Error calculating travel time:', error);
+      return null;
+    }
+  }
+
+  function getMinutesFromTravelTime(travelTime) {
+    const parts = travelTime.split(' ');
+    let minutes = 0;
+    for (let i = 0; i < parts.length; i++) {
+        if (parts[i] === 'hours') {
+            minutes += parseInt(parts[i - 1]) * 60;
+        } else if (parts[i] === 'mins' || parts[i] === 'min') {
+            minutes += parseInt(parts[i - 1]);
+        }
+    }
+    return minutes;
+}
+
+exports.NearBy=async (req,res)=>{
+    try {
+    const requestingPlayer = await User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id)});
+    if (!requestingPlayer) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
+    // Fetch available players in the same city, excluding the requesting player
+    const availablePlayers = await User.find({
+      city: requestingPlayer.city,
+      status: 1, // Assuming status 1 represents available players
+      _id: { $ne: requestingPlayer._id } // Exclude requesting player
+    });
+
+    // Calculate travel time to each available player
+    const playersWithTravelTimes =await Promise.all(availablePlayers.map(async (player) => {
+        
+      const travelTime = await calculateTravelTime(requestingPlayer, player);
+      return { ...player.toObject(), travelTime };
+    }));
+     // Sort players by travel time in ascending order
+     playersWithTravelTimes.sort((a, b) => {
+        const timeA = getMinutesFromTravelTime(a.travelTime);
+        const timeB = getMinutesFromTravelTime(b.travelTime);
+        return timeA - timeB;
+    });
+
+    // Filter players with travel time less than or equal to 20 minutes and recommend up to 5 players
+    const recommendedPlayers = playersWithTravelTimes.filter(player => {
+        const travelTimeInMinutes = getMinutesFromTravelTime(player.travelTime);
+        return travelTimeInMinutes <= 20;
+    }).slice(0, 5);
+
+    res.json({ recommendedPlayers });
+    //res.json({ availablePlayers: playersWithTravelTimes });
+    
+
+  } catch (error) {
+    console.error('Error searching for available players:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }

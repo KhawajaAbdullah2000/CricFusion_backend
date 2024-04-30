@@ -22,6 +22,16 @@ const userSchema = new mongoose.Schema({
     type:String,
     required:true
   },
+  status:{
+    type:Number,
+    default:0
+  },
+  latitude:{
+    type:Number
+  },
+  longitude:{
+    type:Number
+  },
 
   avatar:Buffer,
   tokens:[{type:Object}]
