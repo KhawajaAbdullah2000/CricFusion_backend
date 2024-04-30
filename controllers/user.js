@@ -3,7 +3,9 @@ const PlayerInLeague=require("../models/PlayerInLeagues");
 const jwt=require('jsonwebtoken');
 const mongoose = require("mongoose");
 const ScoreCard=require('../models/ScoreCard');
+const TeamPlayers = require("../models/TeamPlayers");
 const axios = require('axios');
+
 
 exports.homePage=(req,res)=>{
     res.json({'success':true,'message':"welcome to home page"})
@@ -393,3 +395,8 @@ exports.NearBy=async (req,res)=>{
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+
+
+
+
