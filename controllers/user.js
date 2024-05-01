@@ -505,10 +505,10 @@ async function recommendPlayersBowlers(teamId) {
     for (const player of teamPlayers) {
         const performanceMetrics = await getPlayerPerformanceMetricsBowlers(player.player_id);
         playerPerformances.push({
-            player_id: player.player_id._id,  // Only include the ID, or include more data if needed
-            player_details: player.player_id, // Include player details
+            player_id: player.player_id._id,  
+            player_details: player.player_id,
             performance: performanceMetrics,
-            ewma_score: performanceMetrics.wickets_scored_avg // Ensure this includes the EWMA score
+            ewma_score: performanceMetrics.wickets_scored_avg 
         });
     }
   
@@ -530,7 +530,7 @@ async function recommendPlayersBowlers(teamId) {
     // Convert dates and sort manually
     const sortedPerformances = performances.map(performance => ({
       score: performance.wickets_taken,
-      date: new Date(performance.match_id.match_date) // Make sure dates are correctly formatted
+      date: new Date(performance.match_id.match_date) 
     })).sort((a, b) => b.date - a.date); // Sort descending by date
   
     //console.log(sortedPerformances)
