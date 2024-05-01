@@ -4,6 +4,7 @@ const ScoreCardSchema = new mongoose.Schema({
   match_id: {
     type: mongoose.Schema.ObjectId,
     required: true,
+    ref: 'LeagueSchedule' 
   },
 
   player_id: {

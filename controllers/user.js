@@ -396,7 +396,164 @@ exports.NearBy=async (req,res)=>{
   }
 }
 
+exports.Recommend=async(req,res)=>{
+    const  teamId  =new mongoose.Types.ObjectId (req.params.team_id);
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+  
+    try {
+      const recommendedPlayers = await recommendPlayers(teamId);
+      res.json({ success:true,recommendedPlayers });
+    } catch (error) {
+      console.error('Failed to get recommendations:', error);
+      res.status(500).json({success:false, error: 'Failed to get recommendations' });
+    }
+}
+
+async function recommendPlayers(teamId) {
+    const teamPlayers = await TeamPlayers.find({ team_id: teamId }).populate({
+        path: 'player_id',
+        select: '-password -tokens'  // Ensure sensitive fields are excluded
+    });
+  
+    const playerPerformances = [];
+  
+    for (const player of teamPlayers) {
+        const performanceMetrics = await getPlayerPerformanceMetrics(player.player_id);
+        playerPerformances.push({
+            player_id: player.player_id._id,  // Only include the ID, or include more data if needed
+            player_details: player.player_id, // Include player details
+            performance: performanceMetrics,
+            ewma_score: performanceMetrics.runs_scored_avg // Ensure this includes the EWMA score
+        });
+    }
+  
+    // Sort by EWMA score in descending order
+    playerPerformances.sort((a, b) => b.ewma_score - a.ewma_score);
+  
+    return playerPerformances;  // Return full player performances including EWMA scores
+}
 
 
+  async function getPlayerPerformanceMetrics(playerId) {
+    // Fetch data without sorting by populated field
+    const performances = await ScoreCard.find({ player_id: playerId })
+      .populate({
+        path: 'match_id',
+        select: 'match_date' // Ensure this populates correctly
+      });
+  
+    // Convert dates and sort manually
+    const sortedPerformances = performances.map(performance => ({
+      score: performance.runs_scored,
+      date: new Date(performance.match_id.match_date) // Make sure dates are correctly formatted
+    })).sort((a, b) => b.date - a.date); // Sort descending by date
+  
+    //console.log(sortedPerformances)
+    return {
+      runs_scored_avg: calculateDecayMovingAverage(sortedPerformances, 0.5),
+    };
+  }
+
+  function calculateDecayMovingAverage(data, alpha) {
+    let weightedSum = 0;
+    let weight = 1;
+    let totalWeights = 0;
+    let currentDate = new Date();
+   
+  
+    for (const item of data) {
+
+      const daysSinceMatch = (currentDate - new Date(item.date)) / (1000 * 3600 * 24);
+      const decayWeight = Math.exp(-alpha * daysSinceMatch);
+      weightedSum += item.score * decayWeight;
+      totalWeights += decayWeight;
+    }
+
+    console.log(weightedSum / totalWeights);
+  
+    return weightedSum / totalWeights;
+  }
 
 
+  exports.RecommendBowler=async(req,res)=>{
+    const  teamId  =new mongoose.Types.ObjectId (req.params.team_id);
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+  
+    try {
+      const recommendedPlayers = await recommendPlayersBowlers(teamId);
+      res.json({ success:true,recommendedPlayers });
+    } catch (error) {
+      console.error('Failed to get recommendations:', error);
+      res.status(500).json({success:false, error: 'Failed to get recommendations' });
+    }
+}
+
+async function recommendPlayersBowlers(teamId) {
+    const teamPlayers = await TeamPlayers.find({ team_id: teamId }).populate({
+        path: 'player_id',
+        select: '-password -tokens'  // Ensure sensitive fields are excluded
+    });
+  
+    const playerPerformances = [];
+  
+    for (const player of teamPlayers) {
+        const performanceMetrics = await getPlayerPerformanceMetricsBowlers(player.player_id);
+        playerPerformances.push({
+            player_id: player.player_id._id,  // Only include the ID, or include more data if needed
+            player_details: player.player_id, // Include player details
+            performance: performanceMetrics,
+            ewma_score: performanceMetrics.wickets_scored_avg // Ensure this includes the EWMA score
+        });
+    }
+  
+    // Sort by EWMA score in descending order
+    playerPerformances.sort((a, b) => b.ewma_score - a.ewma_score);
+  
+    return playerPerformances;  // Return full player performances including EWMA scores
+}
+
+
+  async function getPlayerPerformanceMetricsBowlers(playerId) {
+    // Fetch data without sorting by populated field
+    const performances = await ScoreCard.find({ player_id: playerId })
+      .populate({
+        path: 'match_id',
+        select: 'match_date' // Ensure this populates correctly
+      });
+  
+    // Convert dates and sort manually
+    const sortedPerformances = performances.map(performance => ({
+      score: performance.wickets_taken,
+      date: new Date(performance.match_id.match_date) // Make sure dates are correctly formatted
+    })).sort((a, b) => b.date - a.date); // Sort descending by date
+  
+    //console.log(sortedPerformances)
+    return {
+      wickets_scored_avg: calculateDecayMovingAverageBowlers(sortedPerformances, 0.5),
+    };
+  }
+
+  function calculateDecayMovingAverageBowlers(data, alpha) {
+    let weightedSum = 0;
+    let totalWeights = 0;
+    let currentDate = new Date();
+   
+  
+    for (const item of data) {
+
+      const daysSinceMatch = (currentDate - new Date(item.date)) / (1000 * 3600 * 24);
+      const decayWeight = Math.exp(-alpha * daysSinceMatch);
+      weightedSum += item.score * decayWeight;
+      totalWeights += decayWeight;
+    }
+
+    console.log(weightedSum / totalWeights);
+  
+    return weightedSum / totalWeights;
+  }

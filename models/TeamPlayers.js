@@ -5,7 +5,8 @@ const TeamPlayersSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId
   },
   player_id: {
-    type:  mongoose.Schema.ObjectId
+    type:  mongoose.Schema.ObjectId,
+    ref: 'User' 
   }
 
 });
