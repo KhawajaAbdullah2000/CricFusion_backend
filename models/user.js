@@ -23,8 +23,12 @@ const userSchema = new mongoose.Schema({
     required:true
   },
   status:{
+    type:Boolean,
+    default:false
+  },
+  Phone:{
     type:Number,
-    default:0
+    default:3332227364
   },
   latitude:{
     type:Number

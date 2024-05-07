@@ -3,7 +3,9 @@ const PlayerInLeague=require("../models/PlayerInLeagues");
 const jwt=require('jsonwebtoken');
 const mongoose = require("mongoose");
 const ScoreCard=require('../models/ScoreCard');
+const TeamPlayers = require("../models/TeamPlayers");
 const axios = require('axios');
+
 
 exports.homePage=(req,res)=>{
     res.json({'success':true,'message':"welcome to home page"})
@@ -166,6 +168,7 @@ exports.UserStats=async(req,res)=>{
                         { $toString: { $mod: ["$total_balls_bowled", 6] } }
                     ]
                 },
+             
                 batting_average: {
                     $cond: {
                         if: { $eq: ["$dismissals", 0] },
@@ -249,15 +252,16 @@ exports.UserStats=async(req,res)=>{
                });
 
        
-        
-          
-      
+
     
         // Prepare response data
         const responseData = {
             success:true,
           first_name: user.first_name,
           last_name: user.last_name,
+          status:user.status,
+          phone:user.Phone,
+          matches_played:matches_played,
           performance: performance.length > 0 ? performance[0] : "No record"
         };
 
@@ -268,17 +272,58 @@ exports.UserStats=async(req,res)=>{
         res.status(500).send('Server error');
       }
 }
+
+exports.UpdateLocation=async(req,res)=>{
+try {
+
+    const user=await User.findOneAndUpdate(
+        { _id: new mongoose.Types.ObjectId(req.params.id) }, // Query criteria
+        { $set: 
+            { 
+            latitude: req.body.latitude,
+            longitude:req.body.longitude
+            } 
+    }
+    );
+    res.json({success:true,message:"Location updated"})
+    
+} catch (error) {
+    res.json({success:false,error:error.message});
+}
+}
+
+exports.UpdateStatus=async(req,res)=>{
+    try {
+        console.log(req.body)
+        const user=await User.findOneAndUpdate(
+          
+            { _id: new mongoose.Types.ObjectId(req.params.id) }, // Query criteria
+            { $set: 
+                { 
+                status: req.body.status
+                
+                } 
+        }
+        );
+        res.json({success:true,message:"Status updated"})
+        
+    } catch (error) {
+        res.json({success:false,error:error.message});
+    }
+    }
+
+
+
 async function calculateTravelTime(requesting, player  ) {
     const apiKey = process.env.API_key;
     const origin = `${requesting.latitude},${requesting.longitude}`;
     const destination = `${player.latitude},${player.longitude}`;
-    console.log(origin);
-    console.log(destination);
-    const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
+   // console.log(origin,destination);
+   const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
   
     try {
       const response = await axios.get(apiUrl);
-      console.log(response.data.rows[0]);
+
       const travelTime = response.data.rows[0].elements[0].duration.text;
       return travelTime;
     } catch (error) {
@@ -302,7 +347,8 @@ async function calculateTravelTime(requesting, player  ) {
 
 exports.NearBy=async (req,res)=>{
     try {
-    const requestingPlayer = await User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id)});
+        console.log("Incomming request for nearby")
+    const requestingPlayer = await User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id)},{tokens:0});
     if (!requestingPlayer) {
       return res.status(404).json({ error: 'Player not found' });
     }
@@ -311,34 +357,203 @@ exports.NearBy=async (req,res)=>{
     const availablePlayers = await User.find({
       city: requestingPlayer.city,
       status: 1, // Assuming status 1 represents available players
-      _id: { $ne: requestingPlayer._id } // Exclude requesting player
-    });
+      _id: { $ne: requestingPlayer._id } ,
+     // Exclude requesting player
+    }, {tokens:0});
+
+    if(availablePlayers.length>0){
+        const playersWithTravelTimes =await Promise.all(availablePlayers.map(async (player) => {
+        
+            const travelTime = await calculateTravelTime(requestingPlayer, player);
+            return { ...player.toObject(), travelTime };
+          }));
+           // Sort players by travel time in ascending order
+           playersWithTravelTimes.sort((a, b) => {
+              const timeA = getMinutesFromTravelTime(a.travelTime);
+              const timeB = getMinutesFromTravelTime(b.travelTime);
+              return timeA - timeB;
+          });
+      
+          // Filter players with travel time less than or equal to 20 minutes and recommend up to 5 players
+          const recommendedPlayers = playersWithTravelTimes.filter(player => {
+              const travelTimeInMinutes = getMinutesFromTravelTime(player.travelTime);
+              return travelTimeInMinutes <= 20;
+          }).slice(0, 5);
+      
+          res.json({ success:true,recommendedPlayers });
+          //res.json({ availablePlayers: playersWithTravelTimes });
+          
+    }else{
+        res.json({success:false,message:"No nearby players"});
+    }
 
     // Calculate travel time to each available player
-    const playersWithTravelTimes =await Promise.all(availablePlayers.map(async (player) => {
-        
-      const travelTime = await calculateTravelTime(requestingPlayer, player);
-      return { ...player.toObject(), travelTime };
-    }));
-     // Sort players by travel time in ascending order
-     playersWithTravelTimes.sort((a, b) => {
-        const timeA = getMinutesFromTravelTime(a.travelTime);
-        const timeB = getMinutesFromTravelTime(b.travelTime);
-        return timeA - timeB;
-    });
-
-    // Filter players with travel time less than or equal to 20 minutes and recommend up to 5 players
-    const recommendedPlayers = playersWithTravelTimes.filter(player => {
-        const travelTimeInMinutes = getMinutesFromTravelTime(player.travelTime);
-        return travelTimeInMinutes <= 20;
-    }).slice(0, 5);
-
-    res.json({ recommendedPlayers });
-    //res.json({ availablePlayers: playersWithTravelTimes });
-    
+   
 
   } catch (error) {
     console.error('Error searching for available players:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+exports.Recommend=async(req,res)=>{
+    const  teamId  =new mongoose.Types.ObjectId (req.params.team_id);
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+  
+    try {
+      const recommendedPlayers = await recommendPlayers(teamId);
+      res.json({ success:true,recommendedPlayers });
+    } catch (error) {
+      console.error('Failed to get recommendations:', error);
+      res.status(500).json({success:false, error: 'Failed to get recommendations' });
+    }
+}
+
+async function recommendPlayers(teamId) {
+    const teamPlayers = await TeamPlayers.find({ team_id: teamId }).populate({
+        path: 'player_id',
+        select: '-password -tokens'  // Ensure sensitive fields are excluded
+    });
+  
+    const playerPerformances = [];
+  
+    for (const player of teamPlayers) {
+        const performanceMetrics = await getPlayerPerformanceMetrics(player.player_id);
+        playerPerformances.push({
+            player_id: player.player_id._id,  // Only include the ID, or include more data if needed
+            player_details: player.player_id, // Include player details
+            performance: performanceMetrics,
+            ewma_score: performanceMetrics.runs_scored_avg // Ensure this includes the EWMA score
+        });
+    }
+  
+    // Sort by EWMA score in descending order
+    playerPerformances.sort((a, b) => b.ewma_score - a.ewma_score);
+  
+    return playerPerformances;  // Return full player performances including EWMA scores
+}
+
+
+  async function getPlayerPerformanceMetrics(playerId) {
+    // Fetch data without sorting by populated field
+    const performances = await ScoreCard.find({ player_id: playerId })
+      .populate({
+        path: 'match_id',
+        select: 'match_date' // Ensure this populates correctly
+      });
+  
+    // Convert dates and sort manually
+    const sortedPerformances = performances.map(performance => ({
+      score: performance.runs_scored,
+      date: new Date(performance.match_id.match_date) // Make sure dates are correctly formatted
+    })).sort((a, b) => b.date - a.date); // Sort descending by date
+  
+    //console.log(sortedPerformances)
+    return {
+      runs_scored_avg: calculateDecayMovingAverage(sortedPerformances, 0.5),
+    };
+  }
+
+  function calculateDecayMovingAverage(data, alpha) {
+    let weightedSum = 0;
+    let weight = 1;
+    let totalWeights = 0;
+    let currentDate = new Date();
+   
+  
+    for (const item of data) {
+
+      const daysSinceMatch = (currentDate - new Date(item.date)) / (1000 * 3600 * 24);
+      const decayWeight = Math.exp(-alpha * daysSinceMatch);
+      weightedSum += item.score * decayWeight;
+      totalWeights += decayWeight;
+    }
+
+    console.log(weightedSum / totalWeights);
+  
+    return weightedSum / totalWeights;
+  }
+
+
+  exports.RecommendBowler=async(req,res)=>{
+    const  teamId  =new mongoose.Types.ObjectId (req.params.team_id);
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+  
+    try {
+      const recommendedPlayers = await recommendPlayersBowlers(teamId);
+      res.json({ success:true,recommendedPlayers });
+    } catch (error) {
+      console.error('Failed to get recommendations:', error);
+      res.status(500).json({success:false, error: 'Failed to get recommendations' });
+    }
+}
+
+async function recommendPlayersBowlers(teamId) {
+    const teamPlayers = await TeamPlayers.find({ team_id: teamId }).populate({
+        path: 'player_id',
+        select: '-password -tokens'  // Ensure sensitive fields are excluded
+    });
+  
+    const playerPerformances = [];
+  
+    for (const player of teamPlayers) {
+        const performanceMetrics = await getPlayerPerformanceMetricsBowlers(player.player_id);
+        playerPerformances.push({
+            player_id: player.player_id._id,  
+            player_details: player.player_id,
+            performance: performanceMetrics,
+            ewma_score: performanceMetrics.wickets_scored_avg 
+        });
+    }
+  
+    // Sort by EWMA score in descending order
+    playerPerformances.sort((a, b) => b.ewma_score - a.ewma_score);
+  
+    return playerPerformances;  // Return full player performances including EWMA scores
+}
+
+
+  async function getPlayerPerformanceMetricsBowlers(playerId) {
+    // Fetch data without sorting by populated field
+    const performances = await ScoreCard.find({ player_id: playerId })
+      .populate({
+        path: 'match_id',
+        select: 'match_date' // Ensure this populates correctly
+      });
+  
+    // Convert dates and sort manually
+    const sortedPerformances = performances.map(performance => ({
+      score: performance.wickets_taken,
+      date: new Date(performance.match_id.match_date) 
+    })).sort((a, b) => b.date - a.date); // Sort descending by date
+  
+    //console.log(sortedPerformances)
+    return {
+      wickets_scored_avg: calculateDecayMovingAverageBowlers(sortedPerformances, 0.5),
+    };
+  }
+
+  function calculateDecayMovingAverageBowlers(data, alpha) {
+    let weightedSum = 0;
+    let totalWeights = 0;
+    let currentDate = new Date();
+   
+  
+    for (const item of data) {
+
+      const daysSinceMatch = (currentDate - new Date(item.date)) / (1000 * 3600 * 24);
+      const decayWeight = Math.exp(-alpha * daysSinceMatch);
+      weightedSum += item.score * decayWeight;
+      totalWeights += decayWeight;
+    }
+
+    console.log(weightedSum / totalWeights);
+  
+    return weightedSum / totalWeights;
+  }
